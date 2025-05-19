@@ -2,15 +2,18 @@
 import React, { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff, User } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Signup = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
   
   const { signup, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -48,6 +51,16 @@ const Signup = () => {
     const newPassword = e.target.value;
     setPassword(newPassword);
     setPasswordError(validatePassword(newPassword));
+    
+    if (confirmPassword) {
+      setConfirmPasswordError(newPassword !== confirmPassword ? 'Passwords do not match' : '');
+    }
+  };
+  
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newConfirmPassword = e.target.value;
+    setConfirmPassword(newConfirmPassword);
+    setConfirmPasswordError(password !== newConfirmPassword ? 'Passwords do not match' : '');
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,6 +69,11 @@ const Signup = () => {
     const passwordValidationError = validatePassword(password);
     if (passwordValidationError) {
       setPasswordError(passwordValidationError);
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setConfirmPasswordError('Passwords do not match');
       return;
     }
     
@@ -76,8 +94,18 @@ const Signup = () => {
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md p-8 space-y-8 bg-card rounded-lg shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+      {/* Background with gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-purple-600/30 z-0"></div>
+      
+      {/* Abstract shapes */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-2/3 right-1/3 w-72 h-72 bg-pink-500/20 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div className="w-full max-w-md p-8 space-y-8 bg-card/80 backdrop-blur-sm rounded-lg shadow-lg relative z-10 border border-white/10">
         <div className="text-center">
           <h1 className="text-2xl font-bold">OPQAdmin</h1>
           <p className="text-muted-foreground">Create a new admin account</p>
@@ -144,13 +172,39 @@ const Signup = () => {
             </p>
           </div>
           
+          <div className="form-group">
+            <label htmlFor="confirmPassword" className="text-sm font-medium">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                className={`form-input pr-10 ${confirmPasswordError ? 'border-destructive' : ''}`}
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+                placeholder="Confirm your password"
+                required
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {confirmPasswordError && (
+              <p className="text-destructive text-xs mt-1">{confirmPasswordError}</p>
+            )}
+          </div>
+          
           <button
             type="submit"
             className="btn-primary w-full"
-            disabled={isSubmitting || !!passwordError}
+            disabled={isSubmitting || !!passwordError || !!confirmPasswordError}
           >
             {isSubmitting ? 'Creating account...' : 'Sign Up'}
-            {!isSubmitting && <User className="ml-2 h-4 w-4" />}
           </button>
         </form>
         
